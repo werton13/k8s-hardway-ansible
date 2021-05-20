@@ -1,0 +1,47 @@
+---
+  - hosts: workers
+    become: true
+    gather_facts: false
+    vars_files:
+      - ./vars/cert_vars.yml
+      - ./vars/workers.yml
+    tasks:
+      - name: copy ca SSL certificates from masters[1] to worker's nodes
+        synchronize:
+          src: /home/kuberadm/CERTs/ca.pem
+          dest: /home/kuberadm/ca.pem
+          rsync_path: "/usr/bin/rsync"
+          set_remote_user: true      
+        delegate_to: "{{ groups.masters | first }}"
+
+      - name: copy workers SSL certificates from masters[1] to worker's nodes
+        synchronize:
+          src:  /home/kuberadm/CERTs/{{ inventory_hostname }}.pem
+          dest: /home/kuberadm/{{ inventory_hostname }}.pem
+          rsync_path: "/usr/bin/rsync"
+          set_remote_user: true
+        tags: debug vars
+        delegate_to: "{{ groups.masters | first }}"
+  - hosts: masters
+    become: true
+    gather_facts: false
+    vars_files:
+      - ./vars/cert_vars.yml
+      - ./vars/workers.yml
+    tasks:
+      - name: copy certificates for service-account and api-server to masters
+
+        synchronize:
+          src:  /home/kuberadm/CERTs/{{ item }}.pem
+          dest: /home/kuberadm/{{ item }}.pem
+          rsync_path: "/usr/bin/rsync"
+          set_remote_user: true
+        tags: copy_mastercerts_p1
+
+#        debug:
+#          msg: "K8s-main roles: {{ item }}"
+#        tags: role-list
+        with_items:
+          - "{{ k8s_roles.main }}"
+        delegate_to: "{{ groups.masters | first }}"
+

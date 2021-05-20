@@ -1,0 +1,16 @@
+---
+  k8s_hosts:
+    masters:
+      - k8s-master01
+      - k8s-master02    
+    workers:
+      - k8s-worker01
+      - k8s-worker02
+  k8s_roles:
+    main:
+      - ca
+      - ca-key
+      - api-server
+      - api-server-key
+      - service-account
+      - service-account-key
