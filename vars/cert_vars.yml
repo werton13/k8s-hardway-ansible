@@ -20,11 +20,11 @@
       key_size: "2048"
       key_type: "RSA"
 
-    scheduler:
+    kube-scheduler:
       cn: "system:kube-scheduler"
       o:  "system:kube-scheduler"
       ou: "Kubernetes The Hard Way"
-      name: "scheduler"
+      name: "kune-scheduler"
       key_size: "2048"
       key_type: "RSA"
 
@@ -41,6 +41,14 @@
       o:  "system:node-proxier"
       ou: "Kubernetes The Hard Way"
       name: "kube-proxy"
+      key_size: "2048"
+      key_type: "RSA"
+
+    kube-controller-manager:
+      cn: "system:kube-controller-manager"
+      o:  "system:kube-controller-manager"
+      ou: "Kubernetes The Hard Way"
+      name: "kube-controller-manager"
       key_size: "2048"
       key_type: "RSA"
 

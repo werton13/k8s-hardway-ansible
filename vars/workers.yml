@@ -14,3 +14,7 @@
       - api-server-key
       - service-account
       - service-account-key
+    control:
+      - kube-controller-manager
+      - kube-scheduler
+      - admin
