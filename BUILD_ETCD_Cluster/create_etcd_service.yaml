@@ -1,0 +1,40 @@
+---
+  # Create etcd service
+ - name: create etcd folder
+   file: 
+     path: "{{ item }}"
+     state: directory
+     mode: 0700
+   loop:
+     - /etc/etcd
+     - /var/lib/etcd
+
+ - name: copy CA and API-Server certificate files
+   copy:
+     src: "/home/{{ os_admin_username }}/{{ item }}"
+     dest: "/etc/etcd/{{ item }}"
+     remote_src: true
+   loop:
+     - ca.pem
+     - "{{ ssl_cert_csr.api_server.name }}.pem"
+     - "{{ ssl_cert_csr.api_server.name }}-key.pem"
+     
+ - name: Create the etcd.service systemd unit file
+   vars:
+     internal_ip: "{{ hostvars[inventory_hostname][k8s_nic_name].ipv4.address }}"  #IP of current instance
+     master_n1_name: "{{ groups['masters'][0] }}"
+     master_n2_name: "{{ groups['masters'][1] }}" 
+     master_n1_ip: "{{ hostvars[groups['masters'][0]][k8s_nic_name].ipv4.address }}" # ip of K8s master0 
+     master_n2_ip: "{{ hostvars[groups['masters'][1]][k8s_nic_name].ipv4.address }}" # ip of K8s master1
+   template:
+     src: ./templates/etcd.service.j2
+     dest: /etc/systemd/system/etcd.service
+     owner: "{{ os_admin_username }}"
+     group: "{{ os_admin_username }}"
+     mode:  0640         
+    
+ - name: start etcd service on each master node
+   systemd:
+     state: restarted
+     daemon_reload: yes
+     name: etcd

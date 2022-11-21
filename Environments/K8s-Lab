@@ -10,12 +10,12 @@ k8s-worker01
 k8s-worker02
 
 [localhost:vars]
-ansible_connection=local
-ansible_user=wmadmin
-ansible_sudo_pass=P@ssw0rd2019%
+ansible_connection=
+ansible_user=
+ansible_sudo_pass=
 
 [all:vars]
 ansible_connection=ssh
-ansible_user=kuberadm
+ansible_user=groot
 ansible_ssh_pass=P@ssw0rd$
 ansible_sudo_pass=P@ssw0rd$

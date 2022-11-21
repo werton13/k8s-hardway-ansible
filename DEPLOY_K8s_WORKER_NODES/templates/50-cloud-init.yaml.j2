@@ -1,0 +1,14 @@
+network:
+    ethernets:
+        {{ os_nic1_name }}:
+            dhcp4: no
+            addresses: [{{ HOST_IP }}/24] 
+            nameservers:
+                addresses: [{{ DNS1 }},{{ DNS2 }}]
+            routes:
+            - to: {{ DEST1_NET }}
+              via: {{ DEST1_HOP }}
+
+        {{ os_nic2_name }}:
+            dhcp4: yes
+    version: 2

@@ -1,0 +1,11 @@
+
+- name:  copy certificate files to master nodes
+# copy certificates for service-account and api-server to masters
+  synchronize:
+    src:  "{{ item.key }}"
+    dest: "{{ item.value }}"
+    rsync_path: "/usr/bin/rsync"
+    set_remote_user: true
+  tags: copy_mastercerts_p1
+  loop: "{{ CERT_FILES_FOR_MASTERS | dict2items }}"                 
+  delegate_to: "{{ groups.masters | first }}"

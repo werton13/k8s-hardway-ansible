@@ -1,0 +1,24 @@
+---
+#Configure containerd
+#- hosts: workers[0]
+#  gather_facts: false
+#  become: true
+#  vars_files:
+#    - ./vars/base_vars.yaml
+#    - ./vars/cert_vars.yaml
+#  tasks:
+    - name: copy containerd config file
+      template:
+        src: ./templates/config.toml.j2
+        dest: /etc/containerd/config.toml
+        owner: "{{ os_admin_username }}"
+        group: "{{ os_admin_username }}"
+        mode:  0640    
+
+    - name: create containerd service file
+      template:
+        src: ./templates/containerd.service.j2
+        dest: /etc/systemd/system/containerd.service
+        owner: "{{ os_admin_username }}"
+        group: "{{ os_admin_username }}"
+        mode:  0640 

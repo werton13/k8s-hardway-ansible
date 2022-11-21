@@ -1,0 +1,52 @@
+---
+#
+#- hosts: workers[0]
+#  gather_facts: false
+#  become: true
+#  vars_files:
+#    - ./vars/base_vars.yaml
+#    - ./vars/cert_vars.yaml
+#  vars:
+#    POD_CIDR: "10.244.0.0/16"
+#  tasks:
+    - name: copy kubelet cert file, and cert key to /var/lib/kubelet
+      copy:
+        src: "/home/{{ os_admin_username }}/{{ item }}"
+        dest: "/var/lib/kubelet/{{ item }}"
+        remote_src: yes
+      loop:
+        - "{{ inventory_hostname }}.pem"
+        - "{{ inventory_hostname }}-key.pem"
+
+    - name: copy workers kubeconfig files /var/lib/kubelet/kubeconfig
+      copy:
+        src: "/home/{{ os_admin_username }}/{{ inventory_hostname }}.kubeconfig"
+        #dest: "/var/lib/kubelet/kubeconfig/{{ inventory_hostname }}.kubeconfig"
+        dest: "/var/lib/kubelet/kubeconfig"
+        remote_src: yes
+
+    - name: copy ca cert file to  /var/lib/kubernetes/
+      copy:
+        src: "/home/{{ os_admin_username }}/ca.pem"
+        dest: /var/lib/kubernetes/ca.pem
+        remote_src: yes
+
+    - name: copy kubelet service file
+      template:
+        src: ./templates/kubelet.service.j2
+        dest: /etc/systemd/system/kubelet.service
+        owner: "{{ os_admin_username }}"
+        group: "{{ os_admin_username }}"
+        mode:  0640
+
+
+    - name: copy kubelet config file
+      template:
+        src: ./templates/kubelet-config.yaml.j2
+        dest: /var/lib/kubelet/kubelet-config.yaml
+        owner: "{{ os_admin_username }}"
+        group: "{{ os_admin_username }}"
+        mode:  0640
+      loop: "{{ POD_CIDR | dict2items }}"
+      when: item.key is search( inventory_hostname )
+      tags: kubelet_config

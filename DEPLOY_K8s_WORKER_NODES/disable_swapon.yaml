@@ -1,0 +1,26 @@
+#- hosts: workers[0]
+#  gather_facts: false
+#  become: true
+#  vars_files:
+#    - ./vars/base_vars.yaml
+#    - ./vars/cert_vars.yaml
+#  tasks:
+
+    - name: show swapon state
+      debug:
+        msg: "SWAP is enabled, will try to disable it"
+    
+    - name: disable swapon
+      shell: "swapoff -a"
+      register: SWAP_STATE
+       
+    - name: edit fstab to disabe swap on startup
+      lineinfile:
+        path: /etc/fstab
+        regexp: '^/swap'
+        line: '#/swap.img       none    swap    sw      0       0'
+    
+    - name: show swapoff result
+      debug:
+        msg: "swap on {{ inventory_hostname }} is disabled"
+      when: SWAP_STATE.stdout_lines | length == 0

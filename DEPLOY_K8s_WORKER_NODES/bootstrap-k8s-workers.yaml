@@ -1,0 +1,33 @@
+---
+- hosts: workers
+  gather_facts: true
+  become: true
+  vars_files:
+    - ../shared_vars/base_vars.yaml
+    - ../shared_vars/cert_vars.yaml
+  vars:
+#    POD_CIDR: "10.244.0.0/16"
+    CLUSTER_CIDR: "10.200.0.0/16"
+  tasks:
+    #- name: disable swap - need to RECHECK!
+    #  import_tasks:
+  
+    - name: install k8s workers binaries
+      import_tasks: install_k8s_worker_binaries.yaml
+
+    - name: configure CNI networking
+      import_tasks: configure_cni_network.yaml
+    
+    - name: configure containerd
+      import_tasks: create_containerd_service.yaml
+
+    - name: configure kubelet
+      import_tasks: create_kubelet_service.yaml
+
+    - name: configure kube-proxy
+      import_tasks: create_kubeproxy_service.yaml
+    
+    - name: Start K8s workers services on each worker node
+      import_tasks: start_worker_services.yaml
+
+

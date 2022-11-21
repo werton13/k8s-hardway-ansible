@@ -1,0 +1,9 @@
+- name: start K8s control plane services on each master node
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: "{{ item }}"
+  loop:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler

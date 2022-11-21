@@ -1,0 +1,28 @@
+---
+  # Download and install Kubernetes Controller Binaries binaries
+
+#- hosts: masters
+#  gather_facts: false
+#  become: true
+#  vars_files:
+#    - ./vars/base_vars.yaml
+#    - ./vars/cert_vars.yaml
+#  tasks:
+    - name: download kubernetes controllers binaries binaries
+      get_url:
+        url:  "{{ item.value.url }}"
+        dest: "/home/{{ os_admin_username }}/{{ item.value.filename }}"
+        mode: 0744
+      loop: "{{ DOWNLOADS.masters | dict2items }}"
+      when: ( item.key != "etcd" )
+      tags: k8s-controllers-files
+
+    - name: copy kubernetes controllers binaries to system
+      copy:
+        src: "/home/{{ os_admin_username }}/{{ item.value.filename }}"
+        dest: "/usr/local/bin/{{ item.value.filename }}"
+        remote_src: true
+        mode: 0755      
+      loop: "{{ DOWNLOADS.masters | dict2items }}"
+      when: ( item.key != "etcd" )
+      tags: k8s-controllers-files

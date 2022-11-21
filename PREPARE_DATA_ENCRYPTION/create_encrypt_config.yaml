@@ -1,0 +1,39 @@
+---
+  - hosts: masters[0]
+    become: true
+    gather_facts: false
+    vars_files:
+    #  - ./vars/workers.yml
+    #  - ./vars/generic_vars.yaml
+      - ../shared_vars/base_vars.yaml
+      - ../shared_vars/cert_vars.yaml
+
+    tasks:
+      - name: Generating the Data Encryption key
+        shell: |
+          head -c 32 /dev/urandom | base64 
+        register: ENCRYPTION_KEY
+
+      - name: Create the encryption-config.yaml encryption config file
+        template:
+          src: ./templates/encryption-config.yaml.j2
+          dest: "/home/{{ os_admin_username }}/encryption-config.yaml"
+          owner: "{{ os_admin_username }}"
+          group: "{{ os_admin_username }}"
+          mode: '0700'
+
+  - hosts: masters[1]
+    become: true
+    gather_facts: false
+    vars_files:
+      - ../shared_vars/base_vars.yaml
+      - ../shared_vars/cert_vars.yaml
+    tasks:
+      - name: Distribute encryption config file to K8s-masters
+        synchronize:
+          src:  "/home/{{ os_admin_username }}/encryption-config.yaml"
+          dest: "/home/{{ os_admin_username }}/encryption-config.yaml"
+          rsync_path: "/usr/bin/rsync"
+          set_remote_user: true
+        tags: copy_encryption_config_file
+        delegate_to: "{{ groups.masters | first }}"

@@ -1,0 +1,36 @@
+---
+- hosts: masters[0]
+  become: true
+  gather_facts: false
+  vars_files:
+    - ../shared_vars/base_vars.yaml
+    - ../shared_vars/cert_vars.yaml
+  #  - ./vars/generic_vars.yaml
+  #  - ./vars/workers.yaml
+  tasks:
+    - name: Create certificates for all Kubernetes components
+      import_tasks: create_certs.yaml
+    
+- hosts: masters
+  become: true
+  gather_facts: false
+  vars_files:
+    - ../shared_vars/base_vars.yaml
+    - ../shared_vars/cert_vars.yaml
+  #  - ./vars/workers.yaml
+  #  - ./vars/generic_vars.yaml
+  tasks:
+    - name: copy certificates for service-account and api-server to masters
+      import_tasks: distribute_masters_certs.yaml
+
+- hosts: workers
+  become: true
+  gather_facts: false
+  vars_files:
+    - ../shared_vars/base_vars.yaml
+    - ../shared_vars/cert_vars.yaml
+  #  - ./vars/workers.yaml
+  #  - ./vars/generic_vars.yaml
+  tasks:
+    - name: copy CA certificate file and workers certificates & private keys from from first master node to worker's nodes
+      import_tasks: distribute_workers_certs.yaml

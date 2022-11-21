@@ -1,0 +1,9 @@
+- name: start K8s workers services on each worker node
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: "{{ item }}"
+  loop:
+    - containerd
+    - kubelet
+    - kube-proxy

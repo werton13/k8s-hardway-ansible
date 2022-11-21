@@ -1,0 +1,24 @@
+ - name: create kubernetes folder
+   file: 
+     path: "{{ item }}"
+     state: directory
+     mode: 0700
+   loop:
+      - /var/lib/kubernetes
+      - /etc/kubernetes/config/
+
+ - name: copy CA,API-Server and service account certificate files + encription config file to kubernetes folder
+   copy:
+     src: "/home/{{ os_admin_username }}/{{ item }}"
+     dest: "/var/lib/kubernetes"
+     remote_src: true
+   loop:
+     - ca.pem
+     - ca-key.pem
+     - "{{ ssl_cert_csr.api_server.name }}.pem"
+     - "{{ ssl_cert_csr.api_server.name }}-key.pem"
+     - "{{ ssl_cert_csr.service_accounts.name }}.pem"
+     - "{{ ssl_cert_csr.service_accounts.name }}-key.pem"
+     - encryption-config.yaml
+     - "{{ kubeconfigs['kube_controller_manager'].kube_user_id }}.kubeconfig"
+     - "{{ kubeconfigs['kube_scheduler'].kube_user_id }}.kubeconfig"

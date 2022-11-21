@@ -1,0 +1,53 @@
+creator_email: werton13@gmail.com
+os_admin_username: groot
+
+KUBERNETES_IP_ADDRESS: 
+ - "IP:192.168.56.101"
+ - "IP:192.168.56.102"
+ - "IP:127.0.0.1"
+ - "IP:10.32.0.1"
+ - "IP:192.168.56.200"
+
+
+KUBERNETES_HOSTNAMES:
+  - DNS:kubernetes
+  - DNS:kubernetes.default
+  - DNS:kubernetes.default.svc
+  - DNS:kubernetes.default.svc.cluster
+  - DNS:kubernetes.svc.cluster.local
+  - DNS:{{ groups['masters'][0] }}
+  - DNS:{{ groups['masters'][1] }}
+
+
+ca_cert_src_path: "/home/{{ os_admin_username }}/CERTs/ca.pem"
+ca_cert_dst_path: "/home/{{ os_admin_username }}/ca.pem"
+ca_cert_key_src_path: "/home/{{ os_admin_username }}/CERTs/ca-key.pem"
+ca_cert_key_dst_path: "/home/{{ os_admin_username }}/ca-key.pem"
+
+
+worker_cert_src_path: "/home/{{ os_admin_username }}/CERTs/{{ inventory_hostname }}.pem"
+worker_cert_dst_path: "/home/{{ os_admin_username }}/{{ inventory_hostname }}.pem"
+worker_cert_key_src_path: "/home/{{ os_admin_username }}/CERTs/{{ inventory_hostname }}-key.pem"
+worker_cert_key_dst_path: "/home/{{ os_admin_username }}/{{ inventory_hostname }}-key.pem"
+
+svc_acc_cert_src_path: "/home/{{ os_admin_username }}/CERTs/service-account.pem"
+svc_acc_cert_dst_path: "/home/{{ os_admin_username }}/service-account.pem"
+svc_acc_cert_key_src_path: "/home/{{ os_admin_username }}/CERTs/service-account-key.pem"
+svc_acc_cert_key_dst_path: "/home/{{ os_admin_username }}/service-account-key.pem"
+api_srv_cert_src_path: "/home/{{ os_admin_username }}/CERTs/api-server.pem" 
+api_srv_cert_dst_path: "/home/{{ os_admin_username }}/api-server.pem"
+api_srv_cert_key_src_path: "/home/{{ os_admin_username }}/CERTs/api-server-key.pem" 
+api_srv_cert_key_dst_path: "/home/{{ os_admin_username }}/api-server-key.pem" 
+
+CERT_FILES_FOR_WORKERS:
+  "{{ ca_cert_src_path }}": "{{ ca_cert_dst_path }}"
+  "{{ worker_cert_src_path }}": "{{ worker_cert_dst_path }}"
+  "{{ worker_cert_key_src_path }}": "{{ worker_cert_key_dst_path }}"
+
+CERT_FILES_FOR_MASTERS:
+  "{{ ca_cert_src_path }}": "{{ ca_cert_dst_path }}"
+  "{{ ca_cert_key_src_path }}": "{{ ca_cert_key_dst_path }}"
+  "{{ svc_acc_cert_src_path }}": "{{ svc_acc_cert_dst_path }}"
+  "{{ svc_acc_cert_key_src_path }}": "{{ svc_acc_cert_key_dst_path }}"
+  "{{ api_srv_cert_src_path }}": "{{ api_srv_cert_dst_path }}"
+  "{{ api_srv_cert_key_src_path }}": "{{ api_srv_cert_key_dst_path }}"

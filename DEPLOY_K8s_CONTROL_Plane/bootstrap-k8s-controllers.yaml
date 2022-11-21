@@ -1,0 +1,39 @@
+---
+- hosts: masters
+  gather_facts: true
+  become: true
+  vars_files:
+    - ../shared_vars/base_vars.yaml
+    - ../shared_vars/cert_vars.yaml
+  tasks:
+
+    - name: Download and install Kubernetes Controller Binaries binaries
+      import_tasks: install_k8s_controller_binaries.yaml
+
+    - name: Create kubernetes folders and copy config files
+      import_tasks: prepare_k8s_folders.yaml
+    
+    - name: Create API-Server service
+      import_tasks: create_api_server_service.yaml
+
+    - name: Create Kubernetes Controller Manager Service
+      import_tasks: create_controller_mgr_service.yaml
+
+    - name: Create Kubernetes Scheduler Service
+      import_tasks: create_scheduler_service.yaml
+    
+    - name: Start K8s control plane services on each master node
+      import_tasks: start_cp_services.yaml
+
+- hosts: masters[0]
+  gather_facts: true
+  become: true
+  vars_files:
+    - ../shared_vars/base_vars.yaml
+    - ../shared_vars/cert_vars.yaml
+  tasks:
+    - name: Create K8s cluster role   for Kubelet Authorization via RBAC and bind it to 'kubernetes' user
+      import_tasks: create_rbac_role_api_to_kubelet.yaml
+      tags: RBAC
+
+

@@ -1,0 +1,33 @@
+#- hosts: masters[0]
+#  gather_facts: false
+#  become: true
+#  vars_files:
+#    - ./vars/base_vars.yaml
+#    - ./vars/cert_vars.yaml
+#  tasks:
+ 
+#    - name: copy K8s config for ClusterRole
+#      copy:
+#        src: ./files/kube-apiserver-to-kubelet-role.yaml
+#        dest: "/home/{{ os_admin_username }}/kube-apiserver-to-kubelet-role.yaml"
+#    - name: apply K8s config to create ClusterRole
+#      shell: kubectl --kubeconfig admin.kubeconfig apply -f "/home/{{ os_admin_username }}/kube-apiserver-to-kubelet-role.yaml"
+
+
+      - name: Apply all manifests in a given folder
+        kubernetes.core.k8s:
+          kubeconfig: "/home/{{ os_admin_username }}/admin.kubeconfig"
+          state: present
+          definition: "{{ lookup('template', '{{ item }}') }}"
+          namespace: default
+        with_fileglob:
+          - "k8s_manifests/*.yaml"
+        tags: k8s_manifests
+
+
+        # pip install kubernetes
+        # ansible-galaxy collection install kubernetes.core
+    
+        # ansible masters[0] -b -m apt -a "name=python-pip state=present"
+        # ansible masters[0] -b -m apt -a "name=python3-pip state=present"
+        # ansible masters[0] -b -m pip -a "name=kubernetes"

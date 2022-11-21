@@ -1,0 +1,78 @@
+---
+  
+- hosts: masters:workers
+  gather_facts: true
+  become: yes
+  vars_files:
+    - ../shared_vars/base_vars.yaml
+    - ../shared_vars/cert_vars.yaml
+
+  tasks:
+    - name: update apt
+      apt:
+        update_cache: yes
+        name: "{{ item }}"
+        state: present
+      loop:
+        - sshpass
+        - whois       # required for 'mkpassword' command
+        - python-pip  # required to install kubernetes python package
+        - python3-pip # required to install kubernetes python package
+
+
+    - name: Install kubernetes python package
+      ansible.builtin.pip:
+        name: kubernetes
+    - name: update hostnames to match inventory hostnames
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: update '/etc/hosts' file with a new hostname
+      lineinfile:
+        path: "/etc/hosts"
+        regexp: '^127\.0\.0\.1'
+        line: "127.0.0.1 {{ inventory_hostname }}"
+    
+    - name: add records for each inventory hosts in local hosts file
+      lineinfile:
+        path: "/etc/hosts"
+        line: "{{ hostvars[item][k8s_nic_name].ipv4.address }} {{ item }}"
+      loop: "{{  groups.masters | list + groups.workers | list}}"
+      when: item is not search( inventory_hostname )
+
+    - name: Reboot host and wait for it to restart
+      reboot:
+        msg: "Reboot initiated by Ansible"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: whoami
+
+#- hosts: masters[0]
+#  gather_facts: false
+#  become: yes
+#  vars_files:
+#    - ../shared_vars/base_vars.yaml
+#    - ../shared_vars/cert_vars.yaml
+#  tasks:
+
+#    - name: create password hash from a cleartext variable
+#      shell:
+#        "mkpasswd --method=SHA-512 --rounds=4096 {{ os_admin_password }}"
+#      register: SHA512_PWD
+#      tags: password
+
+#   - name: create admin user for K8s cluster
+#     user:
+#       name: "{{ os_admin_username }}"
+#       comment: "K8s cluster admin"
+#       uid: 1040
+#       shell: /bin/bash
+#       groups: adm,cdrom,sudo,dip,plugdev,lxd
+#       append: yes
+#       update_password: always
+#       # mkpasswd --method=SHA-512 --stdin
+#       password: "{{ SHA512_PWD.stdout }}"
+#     tags: password
+...

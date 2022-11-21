@@ -1,0 +1,164 @@
+k8s_clustername: MyK8sCluster
+os_admin_username: groot
+os_nic1_name: enp0s3
+os_nic2_name: enp0s8
+DNS1: "8.8.8.8"
+DNS2: "1.1.1.1"
+
+
+k8s_nic_name: "ansible_enp0s3"
+KUBERNETES_MAIN_IP_ADDRESS: "192.168.56.101"
+KUBERNETES_IP_ADDRESS: 
+ - "DNS:127.0.0.1"
+ - "DNS:10.32.0.1"
+ - "DNS:192.168.56.200"
+ - "DNS:192.168.56.101"
+ - "DNS:192.168.56.102"
+
+KUBERNETES_HOSTNAMES:
+  - DNS:kubernetes
+  - DNS:kubernetes.default
+  - DNS:kubernetes.default.svc
+  - DNS:kubernetes.default.svc.cluster
+  - DNS:kubernetes.svc.clus
+
+k8s_hosts:
+  masters:
+    - k8s-master01
+    - k8s-master02    
+  workers:
+    - k8s-worker01
+    - k8s-worker02
+k8s_roles:
+  main:
+    - ca
+    - ca-key
+    - api-server
+    - api-server-key
+    - service-account
+    - service-account-key
+  control:
+    - kube-controller-manager:
+        cert_https_endpoint: "127.0.0.1"
+        user: system:kube-controller-manager
+    - kube-scheduler:
+        cert_https_endpoint: "127.0.0.1"
+        user: system:kube-scheduler
+    - admin:
+        cert_https_endpoint: "127.0.0.1"
+        user: admin
+
+#kubeconfig_info:
+kubeconfigs:
+  kubelet:
+    cert_https_endpoint: "{{ KUBERNETES_MAIN_IP_ADDRESS }}"
+    kube_user_id: "{{ inventory_hostname }}"
+    user: "system:node:{{ inventory_hostname }}"
+  kube-proxy:
+    cert_https_endpoint: "{{ KUBERNETES_MAIN_IP_ADDRESS }}"
+    kube_user_id: kube-proxy
+    user: system:kube-proxy  
+  kube-controller-manager:
+    cert_https_endpoint: "127.0.0.1"
+    kube_user_id: kube-controller-manager
+    user: system:kube-controller-manager
+  kube-scheduler:
+    cert_https_endpoint: "127.0.0.1"
+    kube_user_id: kube-scheduler
+    user: system:kube-scheduler
+  admin:
+    cert_https_endpoint: "127.0.0.1"
+    kube_user_id: admin
+    user: admin
+
+DOWNLOADS:
+  masters:
+    etcd:
+      url: "https://github.com/etcd-io/etcd/releases/download/v3.5.5/etcd-v3.5.5-linux-amd64.tar.gz"
+      filename: "etcd-v3.5.5-linux-amd64.tar.gz"
+    kube-apiserver:
+      url: "https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kube-apiserver" 
+      filename: "kube-apiserver"
+    kube-controller-manager:
+      url: "https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kube-controller-manager"
+      filename: "kube-controller-manager"
+    kube-scheduler:
+      url: "https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kube-scheduler"
+      filename: "kube-scheduler"
+    kubectl:
+      url: "https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl"
+      filename: "kubectl"
+  workers:  
+    cri_tools:
+      url:  "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.21.0/crictl-v1.21.0-linux-amd64.tar.gz"
+      filename: "crictl-v1.21.0-linux-amd64.tar.gz"
+    runc:
+      url: "https://github.com/opencontainers/runc/releases/download/v1.0.0-rc93/runc.amd64"
+      filename: "runc"
+    cni_plugins:
+      url: "https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-amd64-v0.9.1.tgz"
+      filename: "cni-plugins-linux-amd64-v0.9.1.tgz"
+    containerd:
+      url: "https://github.com/containerd/containerd/releases/download/v1.4.4/containerd-1.4.4-linux-amd64.tar.gz"
+      filename: "containerd-1.4.4-linux-amd64.tar.gz"
+    kube_proxy:
+      url:  "https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kube-proxy"
+      filename: "kube-proxy"
+    kubelet: 
+      url: "https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubelet"
+      filename: "kubelet"
+    kubectl: 
+      url: "https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl"
+      filename: "kubectl"
+    # runc is a CLI tool for spawning and running containers on Linux according to the OCI specification.
+    # CLI and validation tools for Kubelet Container Runtime Interface (CRI)
+
+
+#kubeconfig_info:
+kubelet_host_key_varname: "{{ inventory_hostname | replace('-','_') }}_key"
+kubeconfigs:
+  kubelet:
+    cert_https_endpoint: "{{ KUBERNETES_MAIN_IP_ADDRESS }}"
+    kube_user_id: "{{ inventory_hostname }}"
+    user: "system:node:{{ inventory_hostname }}"
+    key_data: "{{ vars[kubelet_host_key_varname] | default([]) }}" 
+  kube_proxy:
+    cert_https_endpoint: "{{ KUBERNETES_MAIN_IP_ADDRESS }}"
+    kube_user_id: kube-proxy
+    user: system:kube-proxy  
+    key_data: "{{ kube_proxy_key | default([]) }}" 
+  kube_controller_manager:
+    cert_https_endpoint: "127.0.0.1"
+    kube_user_id: kube-controller-manager
+    user: system:kube-controller-manager
+    key_data: "{{ kube_controller_manager_key | default([]) }}"
+  kube_scheduler:
+    cert_https_endpoint: "127.0.0.1"
+    kube_user_id: kube-scheduler
+    user: system:kube-scheduler
+    key_data: "{{ kube_scheduler_key | default([]) }}"
+  admin:
+    cert_https_endpoint: "127.0.0.1"
+    kube_user_id: admin
+    user: admin
+    key_data: "{{ admin_key | default([]) }}"
+
+service_cluster_ip_range: "10.32.0.0/24"
+service_node_port_range: "30000-32767"
+cluster_cidr: "10.200.0.0/16"
+# POD_CIDR: for two worker nodes, if  more required - add more elements to a dictionary,
+# add additional variables below DEST1 variables (2-N) and add additional routes strings to 50-cloud-init.yaml.j2 file
+# uncommenting lines below will enavle three workers config
+POD_CIDR:
+   "{{ groups.workers[0] }}": "10.244.10.0/24"
+   "{{ groups.workers[1] }}": "10.244.11.0/24"
+#  "{{ groups.workers[2] }}": "10.244.12.0/24"
+
+HOST_IP: "{{ hostvars[inventory_hostname][k8s_nic_name].ipv4.address }}"
+DEST1_NET: "{{ (POD_CIDR_FILTERED | dict2items)[0].value }}"
+DEST1_HOP: "{{ hostvars[ (POD_CIDR_FILTERED | dict2items)[0].key ][k8s_nic_name].ipv4.address }}"
+# DEST2_NET: "{{ (POD_CIDR_FILTERED | dict2items)[1].value }}"
+# DEST2_HOP: "{{ hostvars[ (POD_CIDR_FILTERED | dict2items)[1].key ][k8s_nic_name].ipv4.address }}"
+
+POD_CIDR_MASK: "255.255.255.0"
+CLUSTER_CIDR: "10.200.0.0/16"

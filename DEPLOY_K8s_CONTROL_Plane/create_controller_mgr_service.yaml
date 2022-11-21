@@ -1,0 +1,37 @@
+---
+ # Create Kubernetes Controller Manager
+ #- name: create kubernetes folder
+ #  file: 
+ #    path: /var/lib/kubernetes
+ #    state: directory
+ #    mode: 0700
+
+# - name: copy CA,API-Server and service account certificate files + encription config file to kubernetes folder
+#   copy:
+#     src: "/home/{{ os_admin_username }}/{{ item }}"
+#     dest: "/var/lib/kubernetes"
+#     remote_src: true
+#   loop:
+#     - ca.pem
+#     - ca-key.pem
+#     - "{{ ssl_cert_csr.api_server.name }}.pem"
+#     - "{{ ssl_cert_csr.api_server.name }}-key.pem"
+#     - "{{ ssl_cert_csr.service-account.name }}.pem"
+#     - "{{ ssl_cert_csr.service-account.name }}-key.pem"
+#     - encryption-config.yaml
+             
+  - name: kube-controller-manager.service systemd unit file
+   # vars:
+   #   internal_ip: "{{ hostvars[inventory_hostname][k8s_nic_name].ipv4.address }}"  #IP of current instance
+   #   master_n1_name: "{{ groups['masters'][0] }}"
+   #   master_n2_name: "{{ groups['masters'][1] }}" 
+   #   master_n1_ip: "{{ hostvars[groups['masters'][0]][k8s_nic_name].ipv4.address }}" # ip of K8s master0 
+   #   master_n2_ip: "{{ hostvars[groups['masters'][1]][k8s_nic_name].ipv4.address }}" # ip of K8s master1
+    template:
+      src: ./templates/kube-controller-manager.service.j2
+      dest: /etc/systemd/system/kube-controller-manager.service
+      owner: "{{ os_admin_username }}"
+      group: "{{ os_admin_username }}"
+      mode:  0640  
+
+

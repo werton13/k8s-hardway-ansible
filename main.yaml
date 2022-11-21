@@ -1,0 +1,7 @@
+- import_playbook: ./PREPARE_HOSTS/prepare_hosts.yaml
+- import_playbook: ./PREPARE_CERTS/prepare_certificates.yaml
+- import_playbook: ./PREPARE_Kubeconfig_FILES/prepare_kubeconfigs.yaml
+- import_playbook: ./PREPARE_DATA_ENCRYPTION/create_encrypt_config.yaml
+- import_playbook: ./BUILD_ETCD_Cluster/bootstrap_etcd.yaml
+- import_playbook: ./DEPLOY_K8s_CONTROL_Plane/bootstrap-k8s-controllers.yaml
+- import_playbook: ./DEPLOY_K8s_WORKER_NODES/bootstrap-k8s-workers.yaml

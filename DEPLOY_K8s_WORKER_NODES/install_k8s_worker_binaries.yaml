@@ -1,0 +1,119 @@
+---
+  # Download and install Kubernetes Controller Binaries binaries
+#
+#- hosts: workers[1]
+#  gather_facts: false
+#  become: true
+#  vars_files:
+#    - ./vars/base_vars.yaml
+#    - ./vars/cert_vars.yaml
+#  tasks:
+    - name: create workers Kubernetes directories
+      file: 
+        path: "{{ item }}"
+        state: directory
+        mode: 0700
+      loop:
+        - /etc/cni/net.d
+        - /etc/containerd
+        - /opt/cni/bin 
+        - /var/lib/kubelet 
+        - /var/lib/kube-proxy 
+        - /var/lib/kubernetes
+        - /var/run/kubernetes
+      tags: folders
+
+    - name: install kubelet prerequisites
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - socat
+        - conntrack
+        - ipset
+
+    - name: check swapon state
+      shell: "swapon --show"
+      register: SWAPON_STATE
+      tags: swapon
+    
+    - name: show SWAPON_STATE
+      import_tasks: disable_swapon.yaml        
+      when: SWAPON_STATE.stdout_lines[1] is defined
+      tags: swapon
+      
+    - name: download worker binaries 
+      get_url:
+        url:  "{{ item.value.url }}"
+        dest: "/home/{{ os_admin_username }}/{{ item.value.filename }}"
+        mode: 0744
+      loop: "{{ DOWNLOADS.workers | dict2items }}"
+      tags: workers_files
+
+# Download and Install Worker Binaries
+# НЕ ЗАБЫТЬ ВЕРНУТЬСЯ В БЛОК INSTALL CONTROL PLANE BINARIES  И ПОПРАВИТЬ ИСКЛЮЧЕНИЯ В ЦИКЛЕ ПЕРЕБОРА DOWNNLOADS!!!
+ 
+
+    #Install containerd binaries:
+    - name: create folder for containerd binaries
+      file:
+        path: "/home/{{ os_admin_username }}/containerd"
+        state: directory
+        mode: '0777'
+      tags: containerd
+
+    - name: Extract containerd from archive
+      unarchive:
+        src: "/home/{{ os_admin_username }}/{{ DOWNLOADS.workers.containerd.filename}}"
+        dest: "/home/{{ os_admin_username }}/containerd"
+        remote_src: yes
+      tags: containerd
+    
+    - name: copy extracted containerd binaries to system
+      synchronize:
+        src: "/home/{{ os_admin_username }}/containerd/bin/"
+        dest: "/bin/"
+        rsync_path: "/usr/bin/rsync"
+        set_remote_user: true
+      delegate_to: "{{ inventory_hostname }}"
+      tags: containerd
+    
+    # Install cni-plugins
+    - name: Extract cni-plugins from archive 
+      unarchive:
+        src:  "/home/{{ os_admin_username }}/{{ DOWNLOADS.workers.cni_plugins.filename }}"
+        dest: "/opt/cni/bin/"
+        remote_src: yes
+      tags: cni
+
+    # Extract CLI and validation tools for Kubelet Container Runtime Interface 
+    - name:  Extract cri-tools from archive
+      unarchive:
+        src: "/home/{{ os_admin_username }}/{{ DOWNLOADS.workers.cri_tools.filename}}"
+        dest: "/home/{{ os_admin_username }}/"
+        remote_src: yes
+      tags: crictl
+    
+    # copy crictl kubectl kube-proxy kubelet runc to /usr/local/bin
+    - name: copy worker Kubernetes binaries to /usr/local/bin
+      copy:
+        src: "/home/{{ os_admin_username }}/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        mode: '0755'
+        remote_src: yes
+      loop:
+        - crictl
+        - kubectl
+        - kube-proxy
+        - kubelet
+        - runc
+      tags: install_k8s_work_binaries
+
+
+
+
+
+    
+
+

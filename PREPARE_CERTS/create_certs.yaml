@@ -1,0 +1,101 @@
+---
+#- hosts: masters[0]
+#  become: true
+#  gather_facts: false
+ # vars_files:
+ #   - ./vars/cert_vars.yml
+ #   - ./vars/workers.yml
+ #   - ./vars/generic_vars.yaml
+#  tasks:
+    - name: create CERTs and CSRs folders
+      file:
+        path: ./{{ item }}
+        owner: "{{ os_admin_username }}"
+        group: "{{ os_admin_username }}"
+        state: directory
+        mode: '1777'
+      tags: create_folders
+      with_items:
+        - CERTs
+        - CSRs
+
+    - name: create private keys for K8s components exept kubelet
+      openssl_privatekey:
+        path: "./CERTs/{{ item.value.name }}-key.pem"
+        size: "{{ item.value.key_size }}"
+        type: "{{ item.value.key_type }}"
+        backup: yes
+      with_dict: "{{ ssl_cert_csr  }}"
+
+    - name: create private keys for kubelet nodes
+      openssl_privatekey:
+        path: "./CERTs/{{ item }}-key.pem"
+        size: "2048"
+        type: "RSA"
+        backup: true
+      with_items: "{{ k8s_hosts.workers }}"
+      tags: kubelet_certs
+
+    - name: create CSR for K8s components exept kubelet
+      openssl_csr:
+        path: ./CSRs/{{ item.value.name }}.csr
+        privatekey_path: ./CERTs/{{ item.value.name }}-key.pem
+        country_name: RU
+        organization_name: "{{ item.value.o }}"
+        organizational_unit_name: "{{ item.value.ou }}"
+        email_address: "{{ creator_email }}"
+        common_name: "{{ item.value.cn }}"
+        basic_constraints: "{{ item.value.basic_constraints | default([]) }}" 
+        key_usage:  "{{ item.value.key_usage }}"
+        extended_key_usage: "{{ item.value.extended_key_usage }}"
+        subject_alt_name: "{{ item.value.SAN | default([]) }}" 
+        use_common_name_for_san: true
+      with_dict: "{{ ssl_cert_csr }}"
+#
+    - name: create CSR for kubelet nodes
+      openssl_csr:
+        path: ./CSRs/{{ item }}.csr
+        privatekey_path: ./CERTs/{{ item }}-key.pem
+        country_name: RU
+        organization_name: "system:nodes"
+        organizational_unit_name: "Kubernetes The Hard Way"
+        email_address: "{{ creator_email }}"
+        common_name: "system:node:{{ item }}"
+        subject_alt_name: "DNS:{{ item }}"
+      with_items: "{{ k8s_hosts.workers }}"
+      tags: kubelet_certs
+#
+    - name: Generate a CA Self Signed OpenSSL certificate
+      openssl_certificate:
+        path: ./CERTs/ca.pem
+        privatekey_path: ./CERTs/ca-key.pem
+        csr_path: ./CSRs/ca.csr
+        provider: selfsigned
+      tags:
+        - CACert
+#
+    - name: Generate an CA signed OpenSSL certificates for  K8s components exept kubelet
+      openssl_certificate:
+        path: ./CERTs/{{ item.value.name }}.pem
+        csr_path: ./CSRs/{{ item.value.name }}.csr
+        ownca_path: ./CERTs/ca.pem
+        ownca_privatekey_path: ./CERTs/ca-key.pem
+        provider: ownca 
+      tags:
+       - mgmt-certs 
+      with_dict: "{{ ssl_cert_csr }}"
+#    
+    - name: Generate  OpenSSL certificates for K8s kubelet's
+      openssl_certificate:
+        path: ./CERTs/{{ item }}.pem
+        csr_path: ./CSRs/{{ item }}.csr
+        ownca_path: ./CERTs/ca.pem
+        ownca_privatekey_path: ./CERTs/ca-key.pem
+        provider: ownca
+      tags:
+       - kubelet_certs 
+      with_items: "{{ k8s_hosts.workers }}"
+
+  #  - name: show me variables
+  #    debug:
+  #      msg: "{{ ssl_cert_csr.ca.SAN }}"

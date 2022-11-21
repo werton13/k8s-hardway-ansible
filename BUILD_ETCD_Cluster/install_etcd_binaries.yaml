@@ -1,0 +1,25 @@
+---
+  # Download and install binaries
+
+- name: download etcd binaries
+  get_url:
+    #url:  https://github.com/etcd-io/etcd/releases/download/v3.5.5/etcd-v3.5.5-linux-amd64.tar.gz
+    url: "{{ DOWNLOADS.masters.etcd.url }}"
+    dest: "/home/{{ os_admin_username }}/{{ DOWNLOADS.masters.etcd.filename }}"
+    mode: 0744
+    
+- name: Extract etcd archive
+  unarchive:
+    src: "/home/{{ os_admin_username }}/etcd-v3.5.5-linux-amd64.tar.gz"
+    dest: "/home/{{ os_admin_username }}/"
+    remote_src: yes
+  
+- name: copy etcd files
+  synchronize:
+    src: "/home/{{ os_admin_username }}/etcd-v3.5.5-linux-amd64/"
+    dest: "/usr/local/bin/"
+    rsync_path: "/usr/bin/rsync"
+    set_remote_user: true
+  delegate_to: "{{ inventory_hostname }}"
+  tags: copy etcd files
+     

@@ -1,0 +1,13 @@
+---
+- hosts: masters
+  gather_facts: true
+  become: true
+  vars_files:
+    - ../shared_vars/base_vars.yaml
+    - ../shared_vars/cert_vars.yaml
+  tasks:
+    # Download and install binaries
+    - name: Install etcd binaries
+      import_tasks: install_etcd_binaries.yaml
+    - name: Create etcd service
+      import_tasks: create_etcd_service.yaml

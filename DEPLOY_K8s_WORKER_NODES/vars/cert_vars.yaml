@@ -1,0 +1,68 @@
+---
+  ssl_crypt_params:
+    key_size: "4096"
+    key_type: "DSA"
+      
+  ssl_cert_csr:
+    ca:
+      cn: "Kubernetes"
+      o: "Kubernetes"
+      ou: "CA"
+      name: "ca"
+      key_size: "2048"
+      key_type: "RSA"
+      #SAN: "DNS:"
+
+    api_server:
+      cn: "Kubernetes"
+      o:  "Kubernetes"
+      ou: "Kubernetes The Hard Way"
+      name: "api-server"
+      key_size: "2048"
+      key_type: "RSA"
+      SAN: "{{ KUBERNETES_IP_ADDRESS|list + KUBERNETES_HOSTNAMES|list }}"
+
+    kube_scheduler:
+      cn: "system:kube-scheduler"
+      o:  "system:kube-scheduler"
+      ou: "Kubernetes The Hard Way"
+      name: "kube-scheduler"
+      key_size: "2048"
+      key_type: "RSA"
+      #SAN: "DNS:"
+
+    admin:
+      o:  "system:masters"
+      cn: "admin"
+      ou: "Kubernetes The Hard Way"
+      name: "admin"
+      key_size: "2048"
+      key_type: "RSA"
+      #SAN: "DNS:"    
+    
+    kube_proxy:
+      cn: "system:kube-proxy"
+      o:  "system:node-proxier"
+      ou: "Kubernetes The Hard Way"
+      name: "kube-proxy"
+      key_size: "2048"
+      key_type: "RSA"
+      #SAN: "DNS:"
+
+    kube_controller_manager:
+      cn: "system:kube-controller-manager"
+      o:  "system:kube-controller-manager"
+      ou: "Kubernetes The Hard Way"
+      name: "kube-controller-manager"
+      key_size: "2048"
+      key_type: "RSA"
+      #SAN: "DNS:"
+
+    service_accounts:
+      cn: "service-account"
+      o:  "Kubernetes"
+      ou: "Kubernetes The Hard Way"
+      name: "service-account"
+      key_size: "2048"
+      key_type: "RSA"
+      #SAN: "DNS:"

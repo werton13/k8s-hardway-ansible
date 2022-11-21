@@ -1,0 +1,32 @@
+---
+
+#- hosts: workers[0]
+#  gather_facts: false
+#  become: true
+#  vars_files:
+#    - ./vars/base_vars.yaml
+#    - ./vars/cert_vars.yaml
+#  vars:
+#    POD_CIDR: "10.244.0.0/16"
+#    CLUSTER_CIDR: "10.200.0.0/16"
+#  tasks:
+
+- name: copy workers kube-proxy kubeconfig files /var/lib/kube-proxy/kubeconfig
+  copy:
+    src: "/home/{{ os_admin_username }}/kube-proxy.kubeconfig"
+    dest: "/var/lib/kube-proxy/kubeconfig"
+    remote_src: yes
+- name: copy kube-proxy service filels /etc/
+  template:
+    src: ./templates/kube-proxy.service.j2
+    dest: /etc/systemd/system/kube-proxy.service
+    owner: "{{ os_admin_username }}"
+    group: "{{ os_admin_username }}"
+    mode:  0640
+- name: copy kube-proxy config file
+  template:
+    src: ./templates/kube-proxy-config.yaml.j2
+    dest: /var/lib/kube-proxy/kube-proxy-config.yaml
+    owner: "{{ os_admin_username }}"
+    group: "{{ os_admin_username }}"
+    mode:  0640

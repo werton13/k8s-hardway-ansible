@@ -1,0 +1,113 @@
+---
+  ssl_crypt_params:
+  key_size: "4096"
+  key_type: "DSA"
+      
+  ssl_cert_csr:
+    ca:
+      cn: "kubernetes"
+      o: "kubernetes"
+      ou: "CA"
+      name: "ca"
+      key_size: "2048"
+      key_type: "RSA"
+      basic_constraints: "CA:TRUE"
+      key_usage:
+       - "keyCertSign"
+       - "keyEncipherment"
+       - "digitalSignature"
+      extended_key_usage: 
+        - "serverAuth"
+        - "clientAuth"
+      #SAN: "DNS:"
+
+    api-server:
+      cn: "kubernetes"
+      o: "kubernetes"
+      ou: "kubernetes The Hard Way"
+      name: "api-server"
+      key_size: "2048"
+      key_type: "RSA"
+      key_usage:
+       - "keyEncipherment"
+       - "digitalSignature"
+      extended_key_usage: 
+        - "serverAuth"
+        - "clientAuth"
+      SAN: "{{ KUBERNETES_IP_ADDRESS|list + KUBERNETES_HOSTNAMES|list }}"
+
+    kube-scheduler:
+      cn: "system:kube-scheduler"
+      o:  "system:kube-scheduler"
+      ou: "Kubernetes The Hard Way"
+      name: "kube-scheduler"
+      key_size: "2048"
+      key_type: "RSA"
+      key_usage:
+       - "keyEncipherment"
+       - "digitalSignature"
+      extended_key_usage: 
+        - "serverAuth"
+        - "clientAuth"
+      #SAN: "DNS:"
+
+    admin:
+      o:  "system:masters"
+      cn: "admin"
+      ou: "Kubernetes The Hard Way"
+      name: "admin"
+      key_size: "2048"
+      key_type: "RSA"
+      key_usage:
+       - "keyEncipherment"
+       - "digitalSignature"
+      extended_key_usage: 
+        - "serverAuth"
+        - "clientAuth"
+      #SAN: "DNS:"    
+    
+    kube-proxy:
+      cn: "system:kube-proxy"
+      o: "system:node-proxier"
+      ou: "Kubernetes The Hard Way"
+      name: "kube-proxy"
+      key_size: "2048"
+      key_type: "RSA"
+      key_usage:
+       - "keyEncipherment"
+       - "digitalSignature"
+      extended_key_usage: 
+        - "serverAuth"
+        - "clientAuth"
+      #SAN: "DNS:"
+
+    kube-controller-manager:
+      cn: "system:kube-controller-manager"
+      o: "system:kube-controller-manager"
+      ou: "Kubernetes The Hard Way"
+      name: "kube-controller-manager"
+      key_size: "2048"
+      key_type: "RSA"
+      key_usage:
+       - "keyEncipherment"
+       - "digitalSignature"
+      extended_key_usage: 
+        - "serverAuth"
+        - "clientAuth"
+      #SAN: "DNS:"
+
+    service-accounts:
+      cn: "service-account"
+      o: "kubernetes"
+      ou: "Kubernetes The Hard Way"
+      name: "service-account"
+      key_size: "2048"
+      key_type: "RSA"
+      key_usage:
+       - "keyEncipherment"
+       - "digitalSignature"
+      extended_key_usage: 
+        - "serverAuth"
+        - "clientAuth"
+      #SAN: "DNS:"
+ 

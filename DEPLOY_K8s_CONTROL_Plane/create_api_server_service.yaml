@@ -1,0 +1,23 @@
+---
+  # Create API-Server service
+             
+ - name: Create the kube-apiserver.service systemd unit file
+   vars:
+     internal_ip: "{{ hostvars[inventory_hostname][k8s_nic_name].ipv4.address }}"  #IP of current instance
+     master_n1_name: "{{ groups['masters'][0] }}"
+     master_n2_name: "{{ groups['masters'][1] }}" 
+     master_n1_ip: "{{ hostvars[groups['masters'][0]][k8s_nic_name].ipv4.address }}" # ip of K8s master0 
+     master_n2_ip: "{{ hostvars[groups['masters'][1]][k8s_nic_name].ipv4.address }}" # ip of K8s master1
+   template:
+     src: ./templates/kube-apiserver.service.j2
+     dest: /etc/systemd/system/kube-apiserver.service
+     owner: "{{ os_admin_username }}"
+     group: "{{ os_admin_username }}"
+     mode:  0640  
+
+ #   
+ #- name: start etcd service on each master node
+ #  systemd:
+ #    state: restarted
+ #    daemon_reload: yes
+ #    name: etcd

@@ -1,0 +1,69 @@
+---
+
+  #
+  # Each node should have it's own POD_CIDR (dedicated CIDRs defined in variables for each workers group member)
+  # 
+  # we have to specify unique POD_CIDR for each worker - we get it from the dictionary POD_CIDR - 
+  # we compare dictionary KEYs with current inventory hostname and take a related POD_CIDR for this node
+  #
+
+
+    - name: copy bridge network configuration file to system
+      template:
+        src: "./templates/10-bridge.conf.j2"
+        dest: "/etc/cni/net.d/10-bridge.conf"
+      loop: "{{ POD_CIDR | dict2items }}"
+      when: item.key is search( inventory_hostname )
+      tags: network
+    
+    - name: copy loopback network configuration file
+      template:
+        src: "./templates/99-loopback.conf.j2"
+        dest: "/etc/cni/net.d/99-loopback.conf"
+      tags: 
+       - copy loopback.conf
+       - network
+
+  # also we have to create IP routes on each node for  POD CIDRs on other nodes -
+  # I cannot just run shell commans like 'ip route add', cause routes created this way will not persist through OS reboots, 
+  # so we will go Ansible way and use Netplan template to define persistent IP routes.
+  
+  # here we will loop through dictionary keys,  which are differents from a current inventory hostname
+  # and create IP routes for related POD_CIDR and next hop
+  #
+  # if we have more than two worker nodes - we should specify two or more routes in a netplan template and set it to our variables    
+  # here we creating a NEW dictionary, filtered from the base dictionary (excluding a current host)
+  # if our initial dictionary has (3) elements - NEW dictionary will have (2)
+  # For example:
+  #        "k8s-worker02": "10.244.11.0/24",
+  #        "k8s-worker03": "10.244.12.0/24"
+  # but in a Netplan template? to define a routes we need to have IP destination network and next hop IP address
+  # we can access required keys and values from a dictionary, by using keypair numbers in a dictionary (like in array)
+  # this way: "{{ (test | dict2items)[0].value }}" - where [0] is FIRST key-value pair and [1] is SECOND key-value pair 
+  
+  # in a Netplan template we will use specific variables to define new routes
+  #   DEST1_NET = "{{ (POD_CIDR_FILTERED | dict2items)[0].value }}"
+  #   DEST1_HOP = "{{ hostvars[ (POD_CIDR_FILTERED | dict2items)[0].key ][k8s_nic_name].ipv4.address }}"
+  #   DEST2_NET = "{{ (POD_CIDR_FILTERED | dict2items)[1].value }}"
+  #   DEST2_HOP = "{{ hostvars[ (POD_CIDR_FILTERED | dict2items)[1].key ][k8s_nic_name].ipv4.address }}"
+
+    - name: create POD_CIDR_FILTERED dictionary
+      set_fact:
+        POD_CIDR_FILTERED: "{{ POD_CIDR_FILTERED|default({}) | combine( {item.key: item.value} ) }}"
+      loop: "{{ POD_CIDR | dict2items }}"
+      when: item.key is not search( inventory_hostname )
+      tags: network
+
+    - name: update netplan config from template
+      template:
+        src: ./templates/50-cloud-init.yaml.j2
+        dest: /etc/netplan/50-cloud-init.yaml
+        force: yes
+        owner: "{{ os_admin_username }}"
+        group: "{{ os_admin_username }}"
+        mode: 0644
+      tags: network
+    
+    - name: apply network conguration with new routes
+      shell: netplan apply
+      tags: network

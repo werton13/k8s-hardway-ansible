@@ -1,0 +1,15 @@
+
+- name: copy certificate files to worker nodes
+# copy CA certificate file and workers certificates & private keys from from first master node to worker's nodes
+
+  synchronize:
+    src:  "{{ item.key }}"
+    dest: "{{ item.value }}"
+    rsync_path: "/usr/bin/rsync"
+    set_remote_user: true
+  loop: "{{ CERT_FILES_FOR_WORKERS | dict2items }}"                 
+  tags: 
+    - kubelet_certs
+    - copy_kubelet_certs
+  delegate_to: "{{ groups.masters | first }}"
+
