@@ -8,4 +8,6 @@ https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/04-c
 
 
  !!! this step generating errors ---> create_rbac_role_api_to_kubelet.yaml
- !!! neet to find the reason
+ !!! need to find the reason
+
+ Also in the upcoming updates I will try to clean code from comments, unnecessary files and vars
